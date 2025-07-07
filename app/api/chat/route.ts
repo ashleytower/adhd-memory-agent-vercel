@@ -2,6 +2,7 @@ import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import composio from '@/lib/composio';
 import { MemoryService } from '@/lib/memory';
+import * as Sentry from '@sentry/nextjs';
 
 // ADHD-friendly system prompt
 const SYSTEM_PROMPT = `You are an ADHD Memory Agent - a supportive, non-judgmental AI companion designed specifically to help people with ADHD manage their memories and daily life.
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
     return result.toDataStreamResponse();
   } catch (error) {
     console.error('Chat error:', error);
+    Sentry.captureException(error);
     return new Response(
       JSON.stringify({ error: 'Failed to process chat message' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }

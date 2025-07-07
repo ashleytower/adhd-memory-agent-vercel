@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@composio/core": "^1.0.0",
-    "@composio/vercel": "^1.0.0",
+    "@composio/core": "0.1.35",
+    "@composio/vercel": "0.1.35",
+    "@sentry/nextjs": "^8.0.0",
+    "@sentry/vercel-edge": "^8.0.0",
     "@vercel/kv": "^2.0.0",
     "@vercel/postgres": "^0.10.0",
     "ai": "^3.5.0",

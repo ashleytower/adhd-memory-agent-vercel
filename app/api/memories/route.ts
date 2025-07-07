@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MemoryService } from '@/lib/memory';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET(req: Request) {
   try {
@@ -19,6 +20,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ memories });
   } catch (error) {
     console.error('Memory fetch error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { error: 'Failed to fetch memories' },
       { status: 500 }
@@ -44,6 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ memory });
   } catch (error) {
     console.error('Memory store error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { error: 'Failed to store memory' },
       { status: 500 }
