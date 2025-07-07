@@ -15,7 +15,7 @@
     "@sentry/vercel-edge": "^8.0.0",
     "@vercel/kv": "^2.0.0",
     "@vercel/postgres": "^0.10.0",
-    "ai": "^3.5.0",
+    "ai": "^4.3.17",
     "next": "14.2.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

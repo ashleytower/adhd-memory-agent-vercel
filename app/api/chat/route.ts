@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       maxTokens: 500,
     });
     
-    return result.toDataStreamResponse();
+    return result.toResponse();
   } catch (error) {
     console.error('Chat error:', error);
     Sentry.captureException(error);
