@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { MemoryService } from '@/lib/memory';
+import { ComposioMemoryService } from '@/lib/composio-memory';
 import * as Sentry from '@sentry/nextjs';
+
+const memoryService = new ComposioMemoryService();
 
 export async function GET(req: Request) {
   try {
@@ -12,9 +14,9 @@ export async function GET(req: Request) {
     let memories;
     
     if (query) {
-      memories = await MemoryService.search(userId, query, limit);
+      memories = await memoryService.searchMemories(userId, query, limit);
     } else {
-      memories = await MemoryService.getRecent(userId, limit);
+      memories = await memoryService.getRecentMemories(userId, limit);
     }
     
     return NextResponse.json({ memories });
@@ -33,15 +35,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const userId = 'default_user'; // In production, get from auth
     
-    const memory = await MemoryService.store(userId, {
-      userId,
-      content: body.content,
-      category: body.category,
-      importance: body.importance || 5,
-      tags: body.tags,
-      context: body.context,
-      metadata: body.metadata,
-    });
+    // Assuming body contains 'content' and optionally 'metadata'
+    // The ComposioMemoryService.storeMemory takes userId, content, and metadata
+    const memory = await memoryService.storeMemory(userId, body.content, body.metadata);
     
     return NextResponse.json({ memory });
   } catch (error) {

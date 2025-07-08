@@ -1,8 +1,10 @@
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import composio from '@/lib/composio';
-import { MemoryService } from '@/lib/memory';
+// import composio from '@/lib/composio'; // composio instance is now in ComposioMemoryService
+import { ComposioMemoryService } from '@/lib/composio-memory';
 import * as Sentry from '@sentry/nextjs';
+
+const memoryService = new ComposioMemoryService();
 
 // ADHD-friendly system prompt
 const SYSTEM_PROMPT = `You are an ADHD Memory Agent - a supportive, non-judgmental AI companion designed specifically to help people with ADHD manage their memories and daily life.
@@ -47,36 +49,32 @@ export async function POST(req: Request) {
     if (isMemoryStorage) {
       // Extract what to remember (remove trigger words)
       let contentToStore = lastMessage.content;
-      ['remember', 'store', 'save', 'keep'].forEach(word => {
-        contentToStore = contentToStore.replace(new RegExp(`${word}\\s+(that\\s+)?`, 'gi'), '');
+      ['remember', 'store', 'save', 'keep', "don't forget"].forEach(word => {
+        // More robust replacement to handle different phrasing
+        contentToStore = contentToStore.replace(new RegExp(`\\b${word}\\b(\\s+(me\\s+to|that))?\\s*`, 'gi'), '');
       });
       
-      // Store the memory
-      await MemoryService.store(userId, {
-        userId,
-        content: contentToStore.trim(),
-        importance: 5,
-        category: detectCategory(contentToStore),
-        tags: extractTags(contentToStore),
-        context: 'chat',
-      });
+      // Store the memory using ComposioMemoryService
+      await memoryService.storeMemory(userId, contentToStore.trim(), { context: 'chat' });
     }
     
     // For retrieval, search memories
     let relevantMemories: any[] = [];
     if (isMemoryRetrieval) {
-      const searchQuery = extractSearchQuery(userContent);
-      relevantMemories = await MemoryService.search(userId, searchQuery, 5);
+      // The search query can be the user's content directly, or a processed version
+      // depending on how Composio's search is implemented.
+      // For now, we'll use the user's raw content for search.
+      relevantMemories = await memoryService.searchMemories(userId, userContent, 5);
     }
     
     // Create context with memories
     const contextMessages = [
       { role: 'system' as const, content: SYSTEM_PROMPT },
-      ...messages.slice(0, -1),
+      ...messages.slice(0, -1), // All messages except the last one
       {
         role: 'user' as const,
         content: relevantMemories.length > 0
-          ? `${lastMessage.content}\n\n[Relevant memories found:\n${relevantMemories.map(m => `- ${m.content} (saved ${new Date(m.createdAt).toLocaleDateString()})`).join('\n')}]`
+          ? `${lastMessage.content}\n\n[Relevant memories found:\n${relevantMemories.map(m => `- ${m.content} (saved ${new Date(m.timestamp).toLocaleDateString()})`).join('\n')}]`
           : lastMessage.content,
       },
     ];
@@ -100,37 +98,8 @@ export async function POST(req: Request) {
   }
 }
 
-// Helper functions
-function detectCategory(content: string): string {
-  const lower = content.toLowerCase();
-  if (lower.includes('key') || lower.includes('wallet') || lower.includes('phone')) return 'objects';
-  if (lower.includes('medication') || lower.includes('pill') || lower.includes('medicine')) return 'health';
-  if (lower.includes('meeting') || lower.includes('appointment') || lower.includes('call')) return 'schedule';
-  if (lower.includes('task') || lower.includes('todo') || lower.includes('work')) return 'tasks';
-  return 'general';
-}
-
-function extractTags(content: string): string[] {
-  const tags: string[] = [];
-  const words = content.toLowerCase().split(/\s+/);
-  
-  // Extract common ADHD-related tags
-  const tagWords = ['keys', 'wallet', 'phone', 'medication', 'appointment', 'task', 'reminder'];
-  
-  for (const word of words) {
-    if (tagWords.some(tag => word.includes(tag))) {
-      tags.push(word);
-    }
-  }
-  
-  return tags;
-}
-
-function extractSearchQuery(content: string): string {
-  // Remove question words to get the essence
-  let query = content;
-  ['where', 'what', 'when', 'did', 'show', 'find', 'is', 'are', 'my', 'i', 'me'].forEach(word => {
-    query = query.replace(new RegExp(`\\b${word}\\b`, 'gi'), '');
-  });
-  return query.trim();
-}
+// Helper functions like detectCategory, extractTags, and extractSearchQuery
+// are removed as Composio's Mem0 is expected to handle these aspects or
+// provide different mechanisms for categorization and searching.
+// If specific preprocessing is still needed before sending to Composio,
+// it can be added here or within the ComposioMemoryService.

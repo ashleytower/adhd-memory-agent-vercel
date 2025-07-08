@@ -17,9 +17,9 @@ A supportive AI memory companion designed specifically for people with ADHD, now
 
 - **Next.js 14**: React framework with App Router
 - **Vercel AI SDK**: For streaming chat experiences
-- **Vercel KV**: Redis-compatible key-value storage for memories
-- **Composio**: AI agent integrations (ready for expansion)
+- **Composio**: AI agent integrations, including Mem0 for memory storage
 - **OpenAI GPT-4**: Conversational AI engine
+- **Vercel AI SDK**: For streaming chat experiences
 - **Tailwind CSS**: Beautiful, responsive design
 
 ## 📦 Installation
@@ -58,9 +58,8 @@ npm run dev
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/adhd-memory-agent-vercel)
 
 After deploying:
-1. Add your environment variables in Vercel dashboard
-2. Enable Vercel KV storage (automatic setup)
-3. Your app will be live at `https://your-app.vercel.app`
+1. Add your environment variables in Vercel dashboard (ensure `COMPOSIO_API_KEY` and `OPENAI_API_KEY` are set).
+2. Your app will be live at `https://your-app.vercel.app`
 
 ## 🏗️ Architecture
 
@@ -68,11 +67,11 @@ After deploying:
 app/
 ├── page.tsx          # Main chat interface
 ├── api/
-│   ├── chat/         # Streaming chat endpoint
-│   └── memories/     # Memory CRUD operations
+│   ├── chat/         # Streaming chat endpoint with Composio memory
+│   └── memories/     # Memory CRUD operations via Composio
 ├── lib/
-│   ├── composio.ts   # Composio client setup
-│   └── memory.ts     # Memory service layer
+│   ├── composio.ts        # Composio client setup
+│   └── composio-memory.ts # Composio Memory (Mem0) service layer
 └── components/       # Reusable UI components
 ```
 
